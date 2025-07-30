@@ -2,9 +2,5 @@
   "version": 2,
   "builds": [
     { "src": "next.config.ts", "use": "@vercel/next" }
-  ],
-  "functions": {
-    "api/clone-repo.ts": { "maxDuration": 60, "memory": 1024 },
-    "api/extract-imports.ts": { "maxDuration": 60, "memory": 1024 }
-  }
+  ]
 }
