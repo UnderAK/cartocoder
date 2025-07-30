@@ -32,7 +32,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const result = JSON.parse(stdout);
         res.status(200).json(result);
       } catch (e) {
-        res.status(500).json({ error: "Failed to parse dependency extraction output.", details: e.message });
+        const errMsg = e instanceof Error ? e.message : String(e);
+        res.status(500).json({ error: "Failed to parse dependency extraction output.", details: errMsg });
       }
     } else {
       res.status(500).json({ error: "Dependency extraction script failed.", details: stderr });
