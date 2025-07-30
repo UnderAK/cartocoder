@@ -1,50 +1,52 @@
 import React, { useState } from "react";
+import { type GraphData } from "@/components/GraphViewer";
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 const RepoInputPage: React.FC = () => {
   const [repoUrl, setRepoUrl] = useState("");
+  const [graph, setGraph] = useState<GraphData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [graph, setGraph] = useState<any>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
+    setError(null);
     setGraph(null);
+
     try {
-      const res = await fetch("/api/clone-repo", {
+      const response = await fetch("/api/clone-repo", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ repoUrl }),
       });
 
-      if (!res.ok) {
-        const { error, details } = await res.json();
-        setError(error || `An unknown error occurred. Details: ${details || 'N/A'}`);
-        return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "An unknown error occurred.");
       }
 
-      const graphData = await res.json();
-      setGraph(graphData);
+      setGraph(data);
     } catch (err: any) {
-      setError(err.message || "Something went wrong");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const handleDownload = () => {
     if (!graph) return;
-    const blob = new Blob([JSON.stringify(graph, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'graph.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const dataStr = JSON.stringify(graph, null, 2);
+    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+    const exportFileDefaultName = "graph.json";
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", exportFileDefaultName);
+    linkElement.click();
   };
 
   return (
@@ -57,7 +59,12 @@ const RepoInputPage: React.FC = () => {
         </Link>
       </nav>
       <main className="flex flex-col items-center justify-center min-h-screen px-4 pt-20">
-        <div className="max-w-4xl w-full">
+        <motion.div
+          className="max-w-4xl w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+        >
           <header className="text-center mb-10">
             <h1 className="text-5xl font-bold tracking-tight">Analyze a Repository</h1>
             <p className="mt-3 text-lg text-gray-500">Paste a public GitHub URL to generate an interactive dependency graph.</p>
@@ -97,7 +104,12 @@ const RepoInputPage: React.FC = () => {
           )}
 
           {graph && (
-            <section className="mt-12 border border-gray-200 rounded-2xl overflow-hidden bg-gray-50/50">
+            <motion.section
+              className="mt-12 border border-gray-200 rounded-2xl overflow-hidden bg-gray-50/50"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: "easeInOut" }}
+            >
               <header className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <h2 className="text-xl font-bold">Dependency Graph</h2>
                 <button
@@ -118,9 +130,9 @@ const RepoInputPage: React.FC = () => {
                   </React.Suspense>
                 )}
               </div>
-            </section>
+            </motion.section>
           )}
-        </div>
+        </motion.div>
       </main>
     </div>
   );
