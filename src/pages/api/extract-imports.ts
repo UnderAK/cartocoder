@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { spawn } from "child_process";
-import { join } from "path";
+import { extractImportsFromFiles } from "../../utils/extractImports";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -12,31 +11,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: "Missing or invalid 'files' array in request body." });
   }
 
-  // Path to the dependency extraction script
-  const scriptPath = join(process.cwd(), "scripts", "extract-imports.js");
-
-  const child = spawn("node", [scriptPath, ...files], { stdio: ["ignore", "pipe", "pipe"] });
-  let stdout = "";
-  let stderr = "";
-
-  child.stdout.on("data", (data) => {
-    stdout += data;
-  });
-  child.stderr.on("data", (data) => {
-    stderr += data;
-  });
-
-  child.on("close", (code) => {
-    if (code === 0) {
-      try {
-        const result = JSON.parse(stdout);
-        res.status(200).json(result);
-      } catch (e) {
-        const errMsg = e instanceof Error ? e.message : String(e);
-        res.status(500).json({ error: "Failed to parse dependency extraction output.", details: errMsg });
-      }
-    } else {
-      res.status(500).json({ error: "Dependency extraction script failed.", details: stderr });
-    }
-  });
+  try {
+    const result = extractImportsFromFiles(files);
+    return res.status(200).json(result);
+  } catch (e) {
+    const errMsg = e instanceof Error ? e.message : String(e);
+    return res.status(500).json({ error: "Failed to extract imports.", details: errMsg });
+  }
 }
+
