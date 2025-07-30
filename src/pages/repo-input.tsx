@@ -13,23 +13,21 @@ const RepoInputPage: React.FC = () => {
     setGraph(null);
     try {
       // Step 1: Clone and scan repo
-      const cloneRes = await fetch("/api/clone-repo", {
+      const res = await fetch("/api/clone-repo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ repoUrl }),
       });
-      const cloneData = await cloneRes.json();
-      if (!cloneRes.ok) throw new Error(cloneData.error || "Clone failed");
-      const files: string[] = cloneData.files;
-      // Step 2: Extract import relationships
-      const extractRes = await fetch("/api/extract-imports", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ files }),
-      });
-      const extractData = await extractRes.json();
-      if (!extractRes.ok) throw new Error(extractData.error || "Extract failed");
-      setGraph(extractData.graph);
+
+      if (!res.ok) {
+        const { error, details } = await res.json();
+        setError(error || `An unknown error occurred. Details: ${details || 'N/A'}`);
+        setLoading(false);
+        return;
+      }
+
+      const graphData = await res.json();
+      setGraph(graphData);
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {

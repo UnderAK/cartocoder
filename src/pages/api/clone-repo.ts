@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { extractImportsFromFiles } from "../../utils/extractImports";
 import { tmpdir } from "os";
 import { join } from "path";
 import { mkdtemp } from "fs/promises";
@@ -73,6 +74,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Recursively scan for .js and .ts files, ignoring node_modules, .git, and test folders
     const fileList = await walk(subDir);
 
+    // Extract dependencies and build the graph
+    const graph = extractImportsFromFiles(fileList);
+
     // Schedule deletion of tempDir after 5 minutes
     setTimeout(async () => {
       try {
@@ -81,7 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } catch {}
     }, 5 * 60 * 1000);
 
-    return res.status(200).json({ success: true, tempDir, files: fileList });
+    return res.status(200).json(graph);
   } catch (err: any) {
     return res.status(500).json({ error: "Failed to clone repository.", details: err.message });
   }
