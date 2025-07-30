@@ -29,11 +29,9 @@ const GraphViewer: React.FC<GraphViewerProps> = ({ graph, width = 800, height = 
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Helper to color nodes by file type
-  function getNodeColor(id: string): string {
-    if (id.endsWith('.js')) return '#3498db'; // blue
-    if (id.endsWith('.ts')) return '#9b59b6'; // purple
-    return '#69b3a2';
+  // Monochrome theme for nodes
+  function getNodeFill(id: string): string {
+    return '#ffffff'; // White fill for all nodes
   }
 
   useEffect(() => {
@@ -99,8 +97,10 @@ const GraphViewer: React.FC<GraphViewerProps> = ({ graph, width = 800, height = 
       .data(nodes)
       .enter()
       .append("circle")
-      .attr("r", 18)
-      .attr("fill", (d: any) => getNodeColor(d.id))
+      .attr("r", 12)
+      .attr("stroke", "#000")
+      .attr("stroke-width", 2)
+      .attr("fill", (d: any) => getNodeFill(d.id))
       .on("mouseover", (event: any, d: any) => {
         setHoveredNode(d.id);
       })
@@ -149,32 +149,22 @@ const GraphViewer: React.FC<GraphViewerProps> = ({ graph, width = 800, height = 
         .attr("x2", (d: any) => d.target.x)
         .attr("y2", (d: any) => d.target.y)
         .attr("stroke", (d: any) => {
-          if (
-            hoveredNode &&
-            (d.source.id === hoveredNode || d.target.id === hoveredNode)
-          ) {
-            return "#f39c12";
+          if (hoveredNode && (d.source.id === hoveredNode || d.target.id === hoveredNode)) {
+            return "#000";
           }
-          return "#aaa";
+          return "#ccc";
         })
         .attr("stroke-width", (d: any) => {
-          if (
-            hoveredNode &&
-            (d.source.id === hoveredNode || d.target.id === hoveredNode)
-          ) {
-            return 4;
+          if (hoveredNode && (d.source.id === hoveredNode || d.target.id === hoveredNode)) {
+            return 2;
           }
-          return 2;
+          return 1;
         });
 
       node
         .attr("cx", (d: any) => d.x)
         .attr("cy", (d: any) => d.y)
-        .attr("fill", (d: any) =>
-          hoveredNode && d.id === hoveredNode
-            ? "#f39c12"
-            : getNodeColor(d.id)
-        );
+        .attr("stroke-width", (d: any) => (hoveredNode && d.id === hoveredNode ? 4 : 2));
 
       label
         .attr("x", (d: any) => d.x)
