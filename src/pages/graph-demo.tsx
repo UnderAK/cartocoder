@@ -1,4 +1,5 @@
-import React from "react";
+import React from 'react';
+import Link from 'next/link';
 import GraphViewer, { GraphData } from "@/components/GraphViewer";
 
 const sampleGraph: GraphData = {
@@ -18,28 +19,35 @@ const sampleGraph: GraphData = {
 const GraphDemoPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white text-black font-sans">
-      <main className="container mx-auto px-4 py-16">
-        <div className="max-w-4xl mx-auto">
-          <header className="text-center mb-12">
-            <h1 className="text-6xl font-bold tracking-tighter">Graph Demo</h1>
+      <nav className="absolute top-0 left-0 w-full p-6">
+        <Link href="/" legacyBehavior>
+          <a className="text-2xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
+            Cartocoder
+          </a>
+        </Link>
+      </nav>
+      <main className="flex flex-col items-center justify-center min-h-screen px-4 pt-20">
+        <div className="max-w-4xl w-full">
+          <header className="text-center mb-10">
+            <h1 className="text-5xl font-bold tracking-tight">Graph Demo</h1>
             <p className="mt-3 text-lg text-gray-500">An interactive example of a dependency graph.</p>
           </header>
 
-          <section className="border-2 border-black rounded-lg overflow-hidden">
-            <header className="px-6 py-4 border-b-2 border-black">
+          <section className="border border-gray-200 rounded-2xl overflow-hidden bg-gray-50/50">
+            <header className="px-6 py-4 border-b border-gray-200">
               <h2 className="text-xl font-bold">Sample Graph</h2>
             </header>
             <div className="p-4 bg-white">
               <GraphViewer graph={sampleGraph} width={850} height={600} />
             </div>
-            <footer className="px-6 py-4 border-t-2 border-black">
+            <footer className="px-6 py-4 border-t border-gray-200 bg-gray-50/50">
               <h3 className="text-lg font-semibold mb-3">Instructions</h3>
-              <ul className="space-y-2 text-gray-600">
-                <li><span className="font-semibold">Nodes:</span> All nodes are represented by white circles with a black border.</li>
-                <li className="pt-2">Hover a node to highlight its connections.</li>
-                <li>Click a node to view its full file path.</li>
-                <li>Drag nodes to rearrange the layout.</li>
-                <li>Use your mouse wheel or trackpad to zoom and pan.</li>
+              <ul className="space-y-2 text-gray-600 text-sm">
+                <li><span className="font-semibold">Nodes:</span> All nodes are white circles with a black border.</li>
+                <li className="pt-2"><span className="font-semibold">Hover</span> a node to highlight its connections.</li>
+                <li><span className="font-semibold">Click</span> a node to view its full file path.</li>
+                <li><span className="font-semibold">Drag</span> nodes to rearrange the layout.</li>
+                <li><span className="font-semibold">Zoom & Pan</span> with your mouse wheel or trackpad.</li>
               </ul>
             </footer>
           </section>

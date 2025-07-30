@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Link from 'next/link';
 
 const RepoInputPage: React.FC = () => {
   const [repoUrl, setRepoUrl] = useState("");
@@ -48,27 +49,34 @@ const RepoInputPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white text-black font-sans">
-      <main className="container mx-auto px-4 py-16">
-        <div className="max-w-4xl mx-auto">
-          <header className="text-center mb-12">
-            <h1 className="text-6xl font-bold tracking-tighter">Cartocoder</h1>
-            <p className="mt-3 text-lg text-gray-500">A minimalist dependency visualizer.</p>
+      <nav className="absolute top-0 left-0 w-full p-6">
+        <Link href="/" legacyBehavior>
+          <a className="text-2xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
+            Cartocoder
+          </a>
+        </Link>
+      </nav>
+      <main className="flex flex-col items-center justify-center min-h-screen px-4 pt-20">
+        <div className="max-w-4xl w-full">
+          <header className="text-center mb-10">
+            <h1 className="text-5xl font-bold tracking-tight">Analyze a Repository</h1>
+            <p className="mt-3 text-lg text-gray-500">Paste a public GitHub URL to generate an interactive dependency graph.</p>
           </header>
 
-          <form onSubmit={handleSubmit} className="relative mb-8">
+          <form onSubmit={handleSubmit} className="relative mb-8 max-w-2xl mx-auto">
             <input
               type="url"
-              placeholder="Paste a public GitHub repository URL..."
+              placeholder="e.g., https://github.com/facebook/react"
               value={repoUrl}
               onChange={(e) => setRepoUrl(e.target.value)}
-              className="w-full pl-6 pr-32 py-4 text-base bg-white border-2 border-black rounded-full focus:outline-none"
+              className="w-full pl-6 pr-36 py-4 text-base bg-white border-2 border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all"
               required
               disabled={loading}
             />
             <button
               type="submit"
               disabled={loading || !repoUrl}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black text-white font-semibold py-3 px-8 rounded-full hover:bg-gray-800 transition-colors duration-300 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black text-white font-semibold py-3 px-8 rounded-full hover:bg-gray-800 transition-all duration-300 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transform hover:scale-105 disabled:scale-100"
             >
               {loading ? 'Analyzing...' : 'Analyze'}
             </button>
@@ -77,31 +85,31 @@ const RepoInputPage: React.FC = () => {
           {loading && (
             <div className="text-center py-10">
               <div className="inline-block w-10 h-10 border-2 border-t-black border-gray-200 rounded-full animate-spin"></div>
-              <p className="mt-4 font-semibold">Analyzing repository...</p>
+              <p className="mt-4 font-semibold">Analyzing repository... this can take a moment.</p>
             </div>
           )}
 
           {error && (
-            <div className="border-2 border-black rounded-lg p-4 text-center" role="alert">
-              <p className="font-bold">Analysis Failed</p>
-              <p className="text-gray-600">{error}</p>
+            <div className="border border-red-400 bg-red-50 rounded-lg p-4 text-center max-w-2xl mx-auto" role="alert">
+              <p className="font-bold text-red-700">Analysis Failed</p>
+              <p className="text-red-600">{error}</p>
             </div>
           )}
 
           {graph && (
-            <section className="mt-12 border-2 border-black rounded-lg overflow-hidden">
-              <header className="px-6 py-4 border-b-2 border-black flex justify-between items-center">
+            <section className="mt-12 border border-gray-200 rounded-2xl overflow-hidden bg-gray-50/50">
+              <header className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <h2 className="text-xl font-bold">Dependency Graph</h2>
                 <button
                   onClick={handleDownload}
-                  className="bg-white text-black border-2 border-black font-semibold py-2 px-5 rounded-full hover:bg-gray-100 transition-colors duration-300"
+                  className="bg-white text-black border border-gray-300 font-semibold py-2 px-5 rounded-full hover:bg-gray-100 transition-colors duration-300"
                 >
                   Download JSON
                 </button>
               </header>
               <div className="p-4 bg-white">
                 {typeof window !== "undefined" && (
-                  <React.Suspense fallback={<div className="text-center py-20">Loading graph...</div>}>
+                  <React.Suspense fallback={<div className="text-center py-20 text-gray-500">Loading graph...</div>}>
                     {React.createElement(require("@/components/GraphViewer").default, {
                       graph,
                       width: 850,
