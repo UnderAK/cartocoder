@@ -17,18 +17,35 @@ const sampleGraph: GraphData = {
 
 const GraphDemoPage: React.FC = () => {
   return (
-    <div style={{ padding: 32 }}>
-      <h2 style={{ fontSize: 28, marginBottom: 16 }}>Sample Code Dependency Graph</h2>
-      <GraphViewer graph={sampleGraph} width={700} height={500} />
-      <div style={{ marginTop: 16, color: '#555' }}>
-        <ul>
-          <li><span style={{ color: '#3498db' }}>●</span> .js file</li>
-          <li><span style={{ color: '#9b59b6' }}>●</span> .ts file</li>
-          <li>Hover a node to highlight its edges.</li>
-          <li>Click a node to see its file path.</li>
-          <li>Drag nodes, zoom, and pan freely.</li>
-        </ul>
-      </div>
+    <div className="min-h-screen bg-gray-50 font-sans">
+      <main className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto">
+          <header className="text-center mb-10">
+            <h1 className="text-5xl font-extrabold text-gray-800">Graph Demo</h1>
+            <p className="mt-3 text-lg text-gray-600">An interactive example of a dependency graph.</p>
+          </header>
+
+          <section className="bg-white rounded-2xl shadow-xl ring-1 ring-gray-200 overflow-hidden">
+            <header className="px-8 py-5 bg-gray-50 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-800">Sample Code Dependency Graph</h2>
+            </header>
+            <div className="p-4 bg-gray-100">
+              <GraphViewer graph={sampleGraph} width={850} height={600} />
+            </div>
+            <footer className="px-8 py-5 bg-gray-50 border-t border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-700 mb-3">Legend & Instructions</h3>
+              <ul className="space-y-2 text-gray-600">
+                <li><span className="inline-block w-4 h-4 rounded-full bg-blue-500 mr-2"></span><span className="font-semibold">.js file</span></li>
+                <li><span className="inline-block w-4 h-4 rounded-full bg-purple-500 mr-2"></span><span className="font-semibold">.ts file</span></li>
+                <li className="pt-2">Hover a node to highlight its connections.</li>
+                <li>Click a node to view its full file path.</li>
+                <li>Drag nodes to rearrange the layout.</li>
+                <li>Use your mouse wheel or trackpad to zoom and pan.</li>
+              </ul>
+            </footer>
+          </section>
+        </div>
+      </main>
     </div>
   );
 };

@@ -12,7 +12,6 @@ const RepoInputPage: React.FC = () => {
     setLoading(true);
     setGraph(null);
     try {
-      // Step 1: Clone and scan repo
       const res = await fetch("/api/clone-repo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -22,7 +21,6 @@ const RepoInputPage: React.FC = () => {
       if (!res.ok) {
         const { error, details } = await res.json();
         setError(error || `An unknown error occurred. Details: ${details || 'N/A'}`);
-        setLoading(false);
         return;
       }
 
@@ -35,63 +33,87 @@ const RepoInputPage: React.FC = () => {
     }
   }
 
+  const handleDownload = () => {
+    if (!graph) return;
+    const blob = new Blob([JSON.stringify(graph, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'graph.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <div style={{ padding: 32, maxWidth: 540, margin: "0 auto" }}>
-      <h2 style={{ fontSize: 24, marginBottom: 16 }}>Analyze a GitHub Repo</h2>
-      <form onSubmit={handleSubmit} style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <input
-          type="url"
-          placeholder="https://github.com/user/repo"
-          value={repoUrl}
-          onChange={e => setRepoUrl(e.target.value)}
-          style={{ flex: 1, padding: 8, fontSize: 16 }}
-          required
-        />
-        <button type="submit" disabled={loading || !repoUrl} style={{ padding: "8px 18px", fontSize: 16, cursor: "pointer" }}>
-          Analyze
-        </button>
-      </form>
-      {loading && (
-        <div style={{ marginTop: 24, textAlign: "center" }}>
-          <div className="spinner" style={{ margin: "0 auto", width: 40, height: 40, border: "4px solid #eee", borderTop: "4px solid #3498db", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-          <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
-          <div style={{ marginTop: 8 }}>Processing…</div>
-        </div>
-      )}
-      {error && <div style={{ color: "#d32f2f", marginTop: 18 }}>{error}</div>}
-      {graph && (
-        <div style={{ marginTop: 32, background: '#f9f9fa', borderRadius: 12, boxShadow: '0 2px 12px #0001', padding: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h3 style={{ margin: 0 }}>Dependency Graph</h3>
+    <div className="min-h-screen bg-gray-50 font-sans">
+      <main className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto">
+          <header className="text-center mb-10">
+            <h1 className="text-5xl font-extrabold text-gray-800">Cartocoder</h1>
+            <p className="mt-3 text-lg text-gray-600">Visualize any public GitHub repository as an interactive dependency graph.</p>
+          </header>
+
+          <form onSubmit={handleSubmit} className="relative mb-8">
+            <input
+              type="url"
+              placeholder="Paste a GitHub repository URL... e.g., https://github.com/facebook/react"
+              value={repoUrl}
+              onChange={(e) => setRepoUrl(e.target.value)}
+              className="w-full pl-6 pr-32 py-4 text-lg border-2 border-gray-300 rounded-full shadow-sm focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-shadow duration-300"
+              required
+              disabled={loading}
+            />
             <button
-              style={{ padding: '6px 18px', fontSize: 15, background: '#3498db', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}
-              onClick={() => {
-                const blob = new Blob([JSON.stringify(graph, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'graph.json';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-              }}
+              type="submit"
+              disabled={loading || !repoUrl}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 text-white font-semibold py-3 px-7 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed transform hover:scale-105 disabled:scale-100"
             >
-              Download JSON
+              {loading ? 'Analyzing...' : 'Analyze'}
             </button>
-          </div>
-          {/* Lazy load GraphViewer to avoid SSR issues */}
-          {typeof window !== "undefined" && (
-            <React.Suspense fallback={<div>Loading graph…</div>}>
-              {React.createElement(require("@/components/GraphViewer").default, {
-                graph,
-                width: 700,
-                height: 500,
-              })}
-            </React.Suspense>
+          </form>
+
+          {loading && (
+            <div className="text-center py-10">
+              <div className="inline-block w-12 h-12 border-4 border-t-blue-500 border-gray-200 rounded-full animate-spin"></div>
+              <p className="mt-4 text-gray-600 font-semibold">Analyzing repository... this may take a moment.</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-md" role="alert">
+              <p className="font-bold">Error</p>
+              <p>{error}</p>
+            </div>
+          )}
+
+          {graph && (
+            <section className="mt-12 bg-white rounded-2xl shadow-xl ring-1 ring-gray-200 overflow-hidden">
+              <header className="px-8 py-5 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-800">Dependency Graph</h2>
+                <button
+                  onClick={handleDownload}
+                  className="bg-gray-200 text-gray-700 font-semibold py-2 px-5 rounded-full hover:bg-gray-300 transition-colors duration-300"
+                >
+                  Download JSON
+                </button>
+              </header>
+              <div className="p-4 bg-gray-100">
+                {typeof window !== "undefined" && (
+                  <React.Suspense fallback={<div className="text-center py-20">Loading graph visualization...</div>}>
+                    {React.createElement(require("@/components/GraphViewer").default, {
+                      graph,
+                      width: 850, // Adjusted for larger container
+                      height: 600,
+                    })}
+                  </React.Suspense>
+                )}
+              </div>
+            </section>
           )}
         </div>
-      )}
+      </main>
     </div>
   );
 };
