@@ -18,7 +18,7 @@ const walk = async (dir: string, ignoreDirs = ["node_modules", ".git", "test"]) 
     if (fileStat.isDirectory()) {
       if (ignoreDirs.includes(file)) continue;
       results = results.concat(await walk(filePath, ignoreDirs));
-    } else if (filePath.endsWith(".js") || filePath.endsWith(".ts")) {
+        } else if (/\.(js|ts|jsx|tsx)$/.test(filePath)) {
       results.push(filePath);
     }
   }
