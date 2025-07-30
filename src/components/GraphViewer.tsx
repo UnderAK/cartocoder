@@ -129,7 +129,9 @@ const GraphViewer: React.FC<GraphViewerProps> = ({ graph, width = 800, height = 
       );
 
     // Add labels
-    const label = svg.append("g")
+    // Add labels
+    const label = g.append("g")
+      .attr("class", "labels")
       .selectAll("text")
       .data(nodes)
       .enter()

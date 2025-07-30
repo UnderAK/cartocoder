@@ -5,30 +5,48 @@ const fs = require('fs');
 const path = require('path');
 
 function extractDependencies(filePath, fileContent) {
-  const importRegex = /import\s+(?:[^'"\n]+from\s+)?["']([^"']+)["']/g;
-  const requireRegex = /require\(["']([^"']+)["']\)/g;
-  const deps = [];
+  const importRegex = /import(?:\s+.*\s+from)?\s+['"]([^'"]+)['"]/g;
+  const requireRegex = /require\(['"]([^'"]+)['"]\)/g;
+  const exportRegex = /export(?:\s+.*\s+from)?\s+['"]([^'"]+)['"]/g;
+  const deps = new Set();
   let match;
-  while ((match = importRegex.exec(fileContent)) !== null) {
-    deps.push(match[1]);
+
+  for (const regex of [importRegex, requireRegex, exportRegex]) {
+    while ((match = regex.exec(fileContent)) !== null) {
+      deps.add(match[1]);
+    }
   }
-  while ((match = requireRegex.exec(fileContent)) !== null) {
-    deps.push(match[1]);
-  }
-  // Only keep relative imports (local files)
-  return deps.filter(dep => dep.startsWith('./') || dep.startsWith('../'));
+
+  return Array.from(deps).filter(dep => dep.startsWith('.') || dep.startsWith('/'));
 }
 
 function resolveDependency(fromFile, dep) {
-  // Try to resolve .js/.ts extensions, index files, etc.
-  const base = path.dirname(fromFile);
-  let fullPath = path.resolve(base, dep);
-  if (fs.existsSync(fullPath + '.js')) return fullPath + '.js';
-  if (fs.existsSync(fullPath + '.ts')) return fullPath + '.ts';
-  if (fs.existsSync(fullPath + '/index.js')) return fullPath + '/index.js';
-  if (fs.existsSync(fullPath + '/index.ts')) return fullPath + '/index.ts';
-  if (fs.existsSync(fullPath)) return fullPath;
-  return dep; // fallback: unresolved
+  const baseDir = path.dirname(fromFile);
+  const resolvedPath = path.resolve(baseDir, dep);
+  const extensions = ['.js', '.ts', '.jsx', '.tsx'];
+
+  // Case 1: Direct file match
+  if (fs.existsSync(resolvedPath) && fs.statSync(resolvedPath).isFile()) {
+    return resolvedPath;
+  }
+
+  // Case 2: File with extension
+  for (const ext of extensions) {
+    if (fs.existsSync(resolvedPath + ext)) {
+      return resolvedPath + ext;
+    }
+  }
+
+  // Case 3: Directory with index file
+  for (const ext of extensions) {
+    const indexPath = path.join(resolvedPath, 'index' + ext);
+    if (fs.existsSync(indexPath)) {
+      return indexPath;
+    }
+  }
+
+  // Fallback: return original dependency if not resolved
+  return null;
 }
 
 function normalize(p) {
@@ -47,13 +65,15 @@ function main() {
     const fromNorm = normalize(file);
     nodeSet.add(fromNorm);
     for (const dep of deps) {
-      const resolved = normalize(resolveDependency(file, dep));
-      nodeSet.add(resolved);
-      // Edge key for deduplication
-      const edgeKey = `${fromNorm}->${resolved}`;
-      if (!edgeSet.has(edgeKey)) {
-        links.push({ from: fromNorm, to: resolved });
-        edgeSet.add(edgeKey);
+      const resolved = resolveDependency(file, dep);
+      if (resolved) {
+        const toNorm = normalize(resolved);
+        nodeSet.add(toNorm);
+        const edgeKey = `${fromNorm}->${toNorm}`;
+        if (!edgeSet.has(edgeKey)) {
+          links.push({ from: fromNorm, to: toNorm });
+          edgeSet.add(edgeKey);
+        }
       }
     }
   }
