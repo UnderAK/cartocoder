@@ -41,30 +41,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Create a temporary directory
-    const tempDir = await mkdtemp(join(tmpdir(), "cloned-repo-"));
-    const git = simpleGit();
-    await git.clone(repoUrl, tempDir);
+    const tempDir = await mkdtemp(join(tmpdir(), "repo-"));
+    // Try main, then fallback to master
+    let branches = ["main", "master"];
+    let found = false;
+    let zipBuffer: Buffer | null = null;
+    let branchUsed = "main";
+    let subDir = tempDir;
+    const urlParts = repoUrl.split("/");
+    const owner = urlParts[urlParts.length - 2];
+    const repo = urlParts[urlParts.length - 1].replace(".git", "");
+    for (const branch of branches) {
+      const zipUrl = `https://github.com/${owner}/${repo}/archive/refs/heads/${branch}.zip`;
+      const response = await fetch(zipUrl);
+      if (response.ok) {
+        zipBuffer = Buffer.from(await response.arrayBuffer());
+        found = true;
+        branchUsed = branch;
+        break;
+      }
+    }
+    if (!found || !zipBuffer) {
+      return res.status(404).json({ error: "Repository not found or no main/master branch." });
+    }
+    // Unzip
+    const zip = new AdmZip(zipBuffer);
+    zip.extractAllTo(tempDir, true);
+    // The files are inside a subfolder: repo-main or repo-master
+    subDir = join(tempDir, `${repo}-${branchUsed}`);
 
     // Recursively scan for .js and .ts files, ignoring node_modules, .git, and test folders
-    const walk = async (dir: string, ignoreDirs = ["node_modules", ".git", "test"]) => {
-      const { readdir } = await import("fs/promises");
-      const { stat } = await import("fs/promises");
-      let results: string[] = [];
-      const list = await readdir(dir);
-      for (const file of list) {
-        const filePath = join(dir, file);
-        const fileStat = await stat(filePath);
-        if (fileStat.isDirectory()) {
-          if (ignoreDirs.includes(file)) continue;
-          results = results.concat(await walk(filePath, ignoreDirs));
-        } else if (filePath.endsWith(".js") || filePath.endsWith(".ts")) {
-          results.push(filePath);
-        }
-      }
-      return results;
-    };
-
     const fileList = await walk(subDir);
 
     // Schedule deletion of tempDir after 5 minutes
