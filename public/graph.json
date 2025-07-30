@@ -1,0 +1,51 @@
+{
+  "nodes": [
+    {
+      "id": "src/components/GraphViewer.tsx"
+    },
+    {
+      "id": "src/pages/_app.tsx"
+    },
+    {
+      "id": "src/pages/_document.tsx"
+    },
+    {
+      "id": "src/pages/api/clone-repo.ts"
+    },
+    {
+      "id": "src/utils/extractImports.ts"
+    },
+    {
+      "id": "src/pages/api/hello.ts"
+    },
+    {
+      "id": "src/pages/graph-demo.tsx"
+    },
+    {
+      "id": "src/pages/index.tsx"
+    },
+    {
+      "id": "src/pages/repo-input.tsx"
+    },
+    {
+      "id": "src/styles/globals.css"
+    },
+    {
+      "id": "src/types/adm-zip.d.ts"
+    }
+  ],
+  "edges": [
+    {
+      "from": "src/pages/api/clone-repo.ts",
+      "to": "src/utils/extractImports.ts"
+    },
+    {
+      "from": "src/pages/graph-demo.tsx",
+      "to": "src/components/GraphViewer.tsx"
+    },
+    {
+      "from": "src/pages/repo-input.tsx",
+      "to": "src/components/GraphViewer.tsx"
+    }
+  ]
+}
